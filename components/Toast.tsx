@@ -17,9 +17,9 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const typeClasses: Record<ToastType, string> = {
-  success: 'bg-emerald-600 text-white',
+  success: 'bg-[#3F7D58] text-white',
   error: 'bg-red-600 text-white',
-  info: 'bg-sky-500 text-white',
+  info: 'bg-[#1F3A5F] text-white',
 };
 
 const typeIcons: Record<ToastType, string> = {
@@ -54,7 +54,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={toast.id}
             className={[
-              'flex items-start gap-3 rounded-lg px-4 py-3 shadow-lg shadow-black/40 animate-in',
+              'flex items-start gap-3 rounded-lg px-4 py-3 shadow-lg animate-in',
               typeClasses[toast.type],
             ].join(' ')}
           >
@@ -80,7 +80,7 @@ export function useToast(): ToastContextValue {
   return ctx;
 }
 
-// ─── Inline alert (non-toast, used inline in forms) ──────────────────────────
+// ─── Inline alert ─────────────────────────────────────────────────────────────
 
 type AlertType = ToastType;
 
@@ -91,9 +91,9 @@ interface AlertProps {
 }
 
 const alertClasses: Record<AlertType, string> = {
-  success: 'bg-emerald-400/10 border-emerald-400/20 text-emerald-300',
-  error: 'bg-red-400/10 border-red-400/20 text-red-300',
-  info: 'bg-sky-400/10 border-sky-400/20 text-sky-300',
+  success: 'bg-[#3F7D58]/10 border-[#3F7D58]/30 text-[#3F7D58]',
+  error: 'bg-red-50 border-red-200 text-red-700',
+  info: 'bg-[#1F3A5F]/10 border-[#1F3A5F]/20 text-[#1F3A5F]',
 };
 
 export function Alert({ type, message, onDismiss }: AlertProps) {

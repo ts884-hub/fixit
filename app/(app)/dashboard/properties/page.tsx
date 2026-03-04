@@ -11,8 +11,6 @@ import { Button } from '@/components/Button';
 import { PageSpinner } from '@/components/Spinner';
 import { Alert } from '@/components/Toast';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function getSubmissionUrl(token: string): string {
   if (typeof window === 'undefined') return `/request/${token}`;
   return `${window.location.origin}/request/${token}`;
@@ -26,8 +24,6 @@ function formatDate(iso: string): string {
   });
 }
 
-// ─── Create form ──────────────────────────────────────────────────────────────
-
 interface CreateFormErrors {
   name?: string;
   address?: string;
@@ -39,8 +35,6 @@ function validate(payload: CreatePropertyPayload): CreateFormErrors {
   if (!payload.address.trim()) errors.address = 'Street address is required.';
   return errors;
 }
-
-// ─── Copied hook ──────────────────────────────────────────────────────────────
 
 function useCopied() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -78,8 +72,6 @@ function useCopied() {
 
   return { copiedId, copy };
 }
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PropertiesPage() {
   const router = useRouter();
@@ -156,29 +148,26 @@ export default function PropertiesPage() {
     setCreateError('');
   }
 
-  if (!authChecked || loading) {
-    return <PageSpinner />;
-  }
+  if (!authChecked || loading) return <PageSpinner />;
 
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Properties</h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h1 className="text-2xl font-bold text-[#1F3A5F]">Properties</h1>
+          <p className="text-sm text-gray-500 mt-1">
             Each property gets a unique submission link you can share with tenants.
             Tickets submitted through a link are automatically routed to your dashboard.
           </p>
         </div>
         {!showForm && (
           <Button onClick={() => setShowForm(true)} size="sm">
-            + New Property
+            + Add Property
           </Button>
         )}
       </div>
 
-      {/* Fetch error */}
       {fetchError && (
         <Alert type="error" message={fetchError} onDismiss={() => setFetchError('')} />
       )}
@@ -186,7 +175,7 @@ export default function PropertiesPage() {
       {/* Create form */}
       {showForm && (
         <Card>
-          <h2 className="text-base font-semibold text-zinc-100 mb-4">Add a Property</h2>
+          <h2 className="text-base font-semibold text-[#1F3A5F] mb-4">Add a Property</h2>
 
           {createError && (
             <div className="mb-4">
@@ -200,7 +189,7 @@ export default function PropertiesPage() {
               name="name"
               value={formData.name}
               onChange={handleFormChange}
-              placeholder='e.g. "Sunset Apartments Block A"'
+              placeholder='e.g. "Maple Street Duplex"'
               hint="A label to help you identify this property in your dashboard."
               error={formErrors.name}
               required
@@ -211,7 +200,7 @@ export default function PropertiesPage() {
               value={formData.address}
               onChange={handleFormChange}
               placeholder="123 Main St, Springfield, IL 62701"
-              hint="This is stored on every ticket submitted through this link."
+              hint="This is stored on every ticket submitted through this property's link."
               error={formErrors.address}
               required
             />
@@ -230,12 +219,11 @@ export default function PropertiesPage() {
       {/* Properties list */}
       {properties.length === 0 && !showForm ? (
         <Card className="text-center py-12 space-y-4">
-          <div className="text-4xl">🏢</div>
-          <p className="text-zinc-300 font-medium">No properties yet.</p>
-          <p className="text-sm text-zinc-500">
-            Create your first property to generate a unique submission link for your tenants.
+          <p className="text-[#2E2E2E] font-medium">No properties added yet.</p>
+          <p className="text-sm text-gray-500">
+            Add your first property to generate a unique submission link for your tenants.
           </p>
-          <Button onClick={() => setShowForm(true)}>+ New Property</Button>
+          <Button onClick={() => setShowForm(true)}>+ Add Property</Button>
         </Card>
       ) : (
         <div className="space-y-4">
@@ -245,24 +233,22 @@ export default function PropertiesPage() {
 
             return (
               <Card key={prop.id} className="space-y-4">
-                {/* Property header */}
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                   <div>
-                    <h3 className="font-semibold text-zinc-100">{prop.name}</h3>
-                    <p className="text-sm text-zinc-400">{prop.address}</p>
+                    <h3 className="font-semibold text-[#1F3A5F]">{prop.name}</h3>
+                    <p className="text-sm text-gray-500">{prop.address}</p>
                   </div>
-                  <p className="text-xs text-zinc-500 whitespace-nowrap shrink-0">
-                    Created {formatDate(prop.created_at)}
+                  <p className="text-xs text-gray-400 whitespace-nowrap shrink-0">
+                    Added {formatDate(prop.created_at)}
                   </p>
                 </div>
 
-                {/* Submission link */}
-                <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 space-y-2">
-                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+                <div className="bg-[#F6F7F8] border border-[#E2E5E7] rounded-lg px-4 py-3 space-y-2">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     Tenant Submission Link
                   </p>
                   <div className="flex items-center gap-3">
-                    <code className="text-sm text-zinc-300 break-all flex-1">
+                    <code className="text-sm text-[#2E2E2E] break-all flex-1">
                       {submissionUrl}
                     </code>
                     <button
@@ -270,16 +256,15 @@ export default function PropertiesPage() {
                       onClick={() => copy(prop.id, submissionUrl)}
                       className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
                         isCopied
-                          ? 'bg-emerald-400/10 border-emerald-400/30 text-emerald-400'
-                          : 'bg-zinc-700 border-zinc-600 text-zinc-300 hover:bg-zinc-600 hover:border-zinc-500'
+                          ? 'bg-[#3F7D58]/10 border-[#3F7D58]/30 text-[#3F7D58]'
+                          : 'bg-white border-[#E2E5E7] text-[#1F3A5F] hover:bg-[#F6F7F8]'
                       }`}
                     >
                       {isCopied ? '✓ Copied' : 'Copy'}
                     </button>
                   </div>
-                  <p className="text-xs text-zinc-500">
-                    Share this link with your tenants. Submissions are routed directly to your
-                    dashboard without exposing your identity.
+                  <p className="text-xs text-gray-400">
+                    Share this link with your tenants. Submissions go directly to your dashboard.
                   </p>
                 </div>
               </Card>

@@ -26,19 +26,16 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-[#F6F7F8] flex flex-col">
       {/* Header */}
-      <header className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-30">
+      <header className="bg-white border-b border-[#E2E5E7] sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Brand */}
           <Link
             href="/"
-            className="font-black text-zinc-100 text-base sm:text-lg tracking-tight flex items-center gap-2"
+            className="font-bold text-[#1F3A5F] text-base sm:text-lg tracking-tight"
           >
-            <span className="text-sky-400">⚒</span>
-            <span>
-              Fix<span className="text-sky-400">It</span>
-            </span>
+            FixIt
           </Link>
 
           {/* Nav */}
@@ -51,8 +48,8 @@ export function AppShell({ children }: AppShellProps) {
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                     pathname.startsWith('/dashboard') &&
                     !pathname.startsWith('/dashboard/properties')
-                      ? 'bg-sky-400/10 text-sky-400'
-                      : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100',
+                      ? 'bg-[#1F3A5F]/10 text-[#1F3A5F]'
+                      : 'text-[#2E2E2E] hover:bg-[#F6F7F8] hover:text-[#1F3A5F]',
                   ].join(' ')}
                 >
                   Tickets
@@ -62,8 +59,8 @@ export function AppShell({ children }: AppShellProps) {
                   className={[
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                     pathname.startsWith('/dashboard/properties')
-                      ? 'bg-sky-400/10 text-sky-400'
-                      : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100',
+                      ? 'bg-[#1F3A5F]/10 text-[#1F3A5F]'
+                      : 'text-[#2E2E2E] hover:bg-[#F6F7F8] hover:text-[#1F3A5F]',
                   ].join(' ')}
                 >
                   Properties
@@ -72,7 +69,7 @@ export function AppShell({ children }: AppShellProps) {
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
-                  className="text-zinc-400"
+                  className="text-[#2E2E2E]"
                 >
                   Logout
                 </Button>
@@ -84,8 +81,8 @@ export function AppShell({ children }: AppShellProps) {
                   className={[
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                     pathname === '/login'
-                      ? 'bg-sky-400/10 text-sky-400'
-                      : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100',
+                      ? 'bg-[#1F3A5F]/10 text-[#1F3A5F]'
+                      : 'text-[#2E2E2E] hover:bg-[#F6F7F8] hover:text-[#1F3A5F]',
                   ].join(' ')}
                 >
                   Log In
@@ -95,8 +92,8 @@ export function AppShell({ children }: AppShellProps) {
                   className={[
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                     pathname === '/signup'
-                      ? 'bg-sky-400/10 text-sky-400'
-                      : 'bg-sky-400 text-zinc-950 hover:bg-sky-300',
+                      ? 'bg-[#1F3A5F]/10 text-[#1F3A5F]'
+                      : 'bg-[#1F3A5F] text-white hover:bg-[#172d4a]',
                   ].join(' ')}
                 >
                   Sign Up
@@ -113,7 +110,7 @@ export function AppShell({ children }: AppShellProps) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-zinc-950 border-t border-zinc-800 py-4 text-center text-xs text-zinc-600">
+      <footer className="bg-white border-t border-[#E2E5E7] py-4 text-center text-xs text-gray-400">
         &copy; {new Date().getFullYear()} FixIt &mdash; Property Maintenance Management
       </footer>
     </div>

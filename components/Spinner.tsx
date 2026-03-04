@@ -14,7 +14,7 @@ const sizeClasses = {
 export function Spinner({ size = 'md', className = '' }: SpinnerProps) {
   return (
     <svg
-      className={['animate-spin text-sky-400', sizeClasses[size], className].join(' ')}
+      className={['animate-spin text-[#1F3A5F]', sizeClasses[size], className].join(' ')}
       viewBox="0 0 24 24"
       fill="none"
       aria-label="Loading"
@@ -47,13 +47,13 @@ export function PageSpinner() {
 
 export function SkeletonRow() {
   return (
-    <div className="animate-pulse flex gap-4 p-4 border-b border-zinc-800">
-      <div className="h-4 bg-zinc-800 rounded w-24" />
-      <div className="h-4 bg-zinc-800 rounded w-32" />
-      <div className="h-4 bg-zinc-800 rounded w-16" />
-      <div className="h-4 bg-zinc-800 rounded w-20" />
-      <div className="h-4 bg-zinc-800 rounded w-16" />
-      <div className="h-4 bg-zinc-800 rounded w-20 ml-auto" />
+    <div className="animate-pulse flex gap-4 p-4 border-b border-[#E2E5E7]">
+      <div className="h-4 bg-gray-200 rounded w-24" />
+      <div className="h-4 bg-gray-200 rounded w-32" />
+      <div className="h-4 bg-gray-200 rounded w-16" />
+      <div className="h-4 bg-gray-200 rounded w-20" />
+      <div className="h-4 bg-gray-200 rounded w-16" />
+      <div className="h-4 bg-gray-200 rounded w-20 ml-auto" />
     </div>
   );
 }

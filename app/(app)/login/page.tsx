@@ -85,7 +85,7 @@ export default function LoginPage() {
   if (!authChecked) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-400 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1F3A5F] border-t-transparent" />
       </div>
     );
   }
@@ -93,10 +93,9 @@ export default function LoginPage() {
   return (
     <div className="max-w-md mx-auto py-12">
       <div className="mb-8 text-center space-y-2">
-        <div className="text-4xl">🔐</div>
-        <h1 className="text-2xl font-bold text-zinc-100">Manager Login</h1>
-        <p className="text-sm text-zinc-400">
-          Sign in to access the maintenance dashboard.
+        <h1 className="text-2xl font-bold text-[#1F3A5F]">Manager Login</h1>
+        <p className="text-sm text-gray-500">
+          Sign in to access your maintenance dashboard.
         </p>
       </div>
 
@@ -145,8 +144,11 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-zinc-500">
-          Tenant? <a href="/request" className="text-sky-400 hover:underline">Submit a request instead.</a>
+        <p className="mt-5 text-center text-xs text-gray-500">
+          Don&apos;t have an account?{' '}
+          <a href="/signup" className="text-[#1F3A5F] hover:underline font-medium">
+            Sign up free
+          </a>
         </p>
       </Card>
     </div>

@@ -21,25 +21,25 @@ export function Textarea({
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={inputId} className="text-sm font-medium text-zinc-300">
+        <label htmlFor={inputId} className="text-sm font-medium text-[#2E2E2E]">
           {label}
-          {props.required && <span className="ml-1 text-red-400">*</span>}
+          {props.required && <span className="ml-1 text-red-500">*</span>}
         </label>
       )}
       <textarea
         id={inputId}
         rows={rows}
         className={[
-          'rounded-lg border px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 bg-zinc-800 resize-y',
-          'focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent',
-          'disabled:bg-zinc-800/50 disabled:text-zinc-600 disabled:cursor-not-allowed',
-          error ? 'border-red-500 bg-red-900/20' : 'border-zinc-700',
+          'rounded-lg border px-3 py-2 text-sm text-[#2E2E2E] placeholder-gray-400 bg-white resize-y',
+          'focus:outline-none focus:ring-2 focus:ring-[#1F3A5F] focus:border-transparent',
+          'disabled:bg-[#F6F7F8] disabled:text-gray-400 disabled:cursor-not-allowed',
+          error ? 'border-red-400 bg-red-50' : 'border-[#E2E5E7]',
           className,
         ].join(' ')}
         {...props}
       />
-      {error && <p className="text-xs text-red-400">{error}</p>}
-      {hint && !error && <p className="text-xs text-zinc-500">{hint}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
     </div>
   );
 }

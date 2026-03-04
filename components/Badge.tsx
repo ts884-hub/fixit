@@ -1,10 +1,7 @@
 import React from 'react';
 import type { TicketStatus, TicketUrgency } from '@/lib/types';
 
-type BadgeVariant =
-  | TicketStatus
-  | TicketUrgency
-  | 'default';
+type BadgeVariant = TicketStatus | TicketUrgency | 'default';
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -14,15 +11,15 @@ interface BadgeProps {
 
 const variantClasses: Record<BadgeVariant, string> = {
   // Status
-  new: 'bg-sky-400/15 text-sky-300 ring-1 ring-sky-400/30',
-  in_progress: 'bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/30',
-  done: 'bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/30',
+  new: 'bg-[#1F3A5F]/10 text-[#1F3A5F] ring-1 ring-[#1F3A5F]/20',
+  in_progress: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  done: 'bg-[#3F7D58]/10 text-[#3F7D58] ring-1 ring-[#3F7D58]/20',
   // Urgency
-  low: 'bg-zinc-700 text-zinc-300',
-  medium: 'bg-orange-400/15 text-orange-300 ring-1 ring-orange-400/30',
-  high: 'bg-red-400/15 text-red-300 ring-1 ring-red-400/30',
+  low: 'bg-[#3F7D58]/10 text-[#3F7D58]',
+  medium: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  high: 'bg-red-50 text-red-700 ring-1 ring-red-200',
   // Default
-  default: 'bg-zinc-700 text-zinc-300',
+  default: 'bg-gray-100 text-gray-600',
 };
 
 const variantLabels: Record<string, string> = {

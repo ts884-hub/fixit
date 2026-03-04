@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'accent' | 'danger' | 'ghost';
 type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,13 +14,15 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    'bg-sky-400 text-zinc-950 font-semibold hover:bg-sky-300 focus-visible:ring-sky-400 disabled:bg-sky-900 disabled:text-sky-600',
+    'bg-[#1F3A5F] text-white font-semibold hover:bg-[#172d4a] focus-visible:ring-[#1F3A5F] disabled:bg-[#1F3A5F]/40 disabled:text-white/60',
   secondary:
-    'bg-zinc-800 text-zinc-100 border border-zinc-700 hover:bg-zinc-700 focus-visible:ring-zinc-500 disabled:text-zinc-600',
+    'bg-white text-[#1F3A5F] border border-[#E2E5E7] hover:bg-[#F6F7F8] focus-visible:ring-[#1F3A5F] disabled:text-[#1F3A5F]/40',
+  accent:
+    'bg-[#3F7D58] text-white font-semibold hover:bg-[#316347] focus-visible:ring-[#3F7D58] disabled:bg-[#3F7D58]/40',
   danger:
-    'bg-red-600 text-white hover:bg-red-500 focus-visible:ring-red-500 disabled:bg-red-900 disabled:text-red-500',
+    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 disabled:bg-red-300',
   ghost:
-    'bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 focus-visible:ring-zinc-600 disabled:text-zinc-700',
+    'bg-transparent text-[#2E2E2E] hover:bg-[#F6F7F8] focus-visible:ring-[#E2E5E7] disabled:text-[#2E2E2E]/40',
 };
 
 const sizeClasses: Record<Size, string> = {

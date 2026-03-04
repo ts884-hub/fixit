@@ -12,8 +12,7 @@ import { Select } from '@/components/Select';
 import { Textarea } from '@/components/Textarea';
 import { StatusBadge, UrgencyBadge, Badge } from '@/components/Badge';
 import { PageSpinner } from '@/components/Spinner';
-import { Alert } from '@/components/Toast';
-import { useToast } from '@/components/Toast';
+import { Alert, useToast } from '@/components/Toast';
 
 const STATUS_OPTIONS: { value: TicketStatus; label: string }[] = [
   { value: 'new', label: 'New' },
@@ -23,9 +22,9 @@ const STATUS_OPTIONS: { value: TicketStatus; label: string }[] = [
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:gap-6 py-3 border-b border-zinc-800 last:border-0">
-      <dt className="text-sm font-medium text-zinc-500 sm:w-40 shrink-0">{label}</dt>
-      <dd className="text-sm text-zinc-100 mt-0.5 sm:mt-0">{value}</dd>
+    <div className="flex flex-col sm:flex-row sm:gap-6 py-3 border-b border-[#E2E5E7] last:border-0">
+      <dt className="text-sm font-medium text-gray-500 sm:w-40 shrink-0">{label}</dt>
+      <dd className="text-sm text-[#2E2E2E] mt-0.5 sm:mt-0">{value}</dd>
     </div>
   );
 }
@@ -95,8 +94,7 @@ export default function TicketDetailPage() {
       setDirty(false);
       showToast('Ticket updated successfully.', 'success');
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : 'Failed to save changes.';
+      const msg = err instanceof Error ? err.message : 'Failed to save changes.';
       setSaveError(msg);
       showToast(msg, 'error');
     } finally {
@@ -104,15 +102,13 @@ export default function TicketDetailPage() {
     }
   }
 
-  if (!authChecked || loading) {
-    return <PageSpinner />;
-  }
+  if (!authChecked || loading) return <PageSpinner />;
 
   if (fetchError) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <Link href="/dashboard" className="text-sm text-sky-400 hover:underline">
-          ← Back to Tickets
+        <Link href="/dashboard" className="text-sm text-[#1F3A5F] hover:underline">
+          &larr; Back to Tickets
         </Link>
         <Alert type="error" message={fetchError} />
         <Button variant="secondary" onClick={fetchTicketData}>
@@ -126,26 +122,24 @@ export default function TicketDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Back nav */}
       <Link
         href="/dashboard"
-        className="inline-flex items-center gap-1 text-sm text-sky-400 hover:underline"
+        className="inline-flex items-center gap-1 text-sm text-[#1F3A5F] hover:underline"
       >
-        ← Back to Tickets
+        &larr; Back to Tickets
       </Link>
 
-      {/* Title + badges */}
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold text-zinc-100">Ticket #{ticket.id.slice(0, 8)}</h1>
+        <h1 className="text-2xl font-bold text-[#1F3A5F]">Ticket #{ticket.id.slice(0, 8)}</h1>
         <StatusBadge status={ticket.status} />
         <UrgencyBadge urgency={ticket.urgency} />
       </div>
 
-      <p className="text-sm text-zinc-500">Submitted {formatDate(ticket.created_at)}</p>
+      <p className="text-sm text-gray-400">Submitted {formatDate(ticket.created_at)}</p>
 
-      {/* Details card */}
+      {/* Details */}
       <Card>
-        <h2 className="text-base font-semibold text-zinc-100 mb-4">Ticket Details</h2>
+        <h2 className="text-base font-semibold text-[#1F3A5F] mb-4">Ticket Details</h2>
         <dl>
           <DetailRow label="Property" value={ticket.property} />
           <DetailRow label="Unit" value={ticket.unit} />
@@ -153,10 +147,7 @@ export default function TicketDetailPage() {
           <DetailRow
             label="Phone"
             value={
-              <a
-                href={`tel:${ticket.tenant_phone}`}
-                className="text-sky-400 hover:underline"
-              >
+              <a href={`tel:${ticket.tenant_phone}`} className="text-[#1F3A5F] hover:underline">
                 {ticket.tenant_phone}
               </a>
             }
@@ -168,37 +159,31 @@ export default function TicketDetailPage() {
           <DetailRow label="Urgency" value={<UrgencyBadge urgency={ticket.urgency} />} />
           <DetailRow
             label="Description"
-            value={
-              <p className="whitespace-pre-wrap text-zinc-200">{ticket.description}</p>
-            }
+            value={<p className="whitespace-pre-wrap text-[#2E2E2E]">{ticket.description}</p>}
           />
         </dl>
       </Card>
 
-      {/* Photo preview */}
+      {/* Photo */}
       {ticket.photo_url && (
         <Card>
-          <h2 className="text-base font-semibold text-zinc-100 mb-4">Attached Photo</h2>
+          <h2 className="text-base font-semibold text-[#1F3A5F] mb-4">Attached Photo</h2>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={ticket.photo_url}
             alt="Maintenance issue photo"
-            className="rounded-lg max-h-80 object-contain border border-zinc-700"
+            className="rounded-lg max-h-80 object-contain border border-[#E2E5E7]"
           />
         </Card>
       )}
 
       {/* Manager actions */}
       <Card>
-        <h2 className="text-base font-semibold text-zinc-100 mb-4">Manager Actions</h2>
+        <h2 className="text-base font-semibold text-[#1F3A5F] mb-4">Manager Actions</h2>
 
         {saveError && (
           <div className="mb-4">
-            <Alert
-              type="error"
-              message={saveError}
-              onDismiss={() => setSaveError('')}
-            />
+            <Alert type="error" message={saveError} onDismiss={() => setSaveError('')} />
           </div>
         )}
 
@@ -220,24 +205,20 @@ export default function TicketDetailPage() {
               setNotes(e.target.value);
               setDirty(true);
             }}
-            placeholder="Add internal notes, next steps, or resolution details…"
+            placeholder="Add internal notes, next steps, or resolution details..."
             rows={4}
             hint="Notes are internal and not visible to the tenant."
           />
 
           <div className="flex items-center gap-3">
-            <Button
-              onClick={handleSave}
-              loading={saving}
-              disabled={!dirty}
-            >
+            <Button onClick={handleSave} loading={saving} disabled={!dirty}>
               Save Changes
             </Button>
             {!dirty && !saving && (
-              <span className="text-xs text-zinc-500">No unsaved changes.</span>
+              <span className="text-xs text-gray-400">No unsaved changes.</span>
             )}
             {dirty && !saving && (
-              <span className="text-xs text-amber-400">You have unsaved changes.</span>
+              <span className="text-xs text-amber-600">You have unsaved changes.</span>
             )}
           </div>
         </div>

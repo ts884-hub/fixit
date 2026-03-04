@@ -96,12 +96,10 @@ export default function SignupPage() {
       }
 
       if (data.loginRedirect) {
-        // Account created but auto-login failed — send to login
         router.replace('/login');
         return;
       }
 
-      // Success — store token and go to properties setup
       setToken(data.token);
       router.replace('/dashboard/properties');
     } catch {
@@ -113,7 +111,7 @@ export default function SignupPage() {
   if (!authChecked) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-400 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1F3A5F] border-t-transparent" />
       </div>
     );
   }
@@ -121,9 +119,8 @@ export default function SignupPage() {
   return (
     <div className="max-w-md mx-auto py-12">
       <div className="mb-8 text-center space-y-2">
-        <div className="text-4xl">⚒</div>
-        <h1 className="text-2xl font-bold text-zinc-100">Create your account</h1>
-        <p className="text-sm text-zinc-400">
+        <h1 className="text-2xl font-bold text-[#1F3A5F]">Create your account</h1>
+        <p className="text-sm text-gray-500">
           Start tracking maintenance across all your properties.
         </p>
       </div>
@@ -176,9 +173,9 @@ export default function SignupPage() {
           </Button>
         </form>
 
-        <p className="mt-5 text-center text-xs text-zinc-500">
+        <p className="mt-5 text-center text-xs text-gray-500">
           Already have an account?{' '}
-          <Link href="/login" className="text-sky-400 hover:underline">
+          <Link href="/login" className="text-[#1F3A5F] hover:underline font-medium">
             Sign in
           </Link>
         </p>

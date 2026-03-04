@@ -29,9 +29,9 @@ const CATEGORY_OPTIONS: { value: TicketCategory; label: string }[] = [
 ];
 
 const URGENCY_OPTIONS: { value: TicketUrgency; label: string }[] = [
-  { value: 'low', label: 'Low – Not urgent, fix when convenient' },
-  { value: 'medium', label: 'Medium – Needs attention soon' },
-  { value: 'high', label: 'High – Urgent, requires immediate attention' },
+  { value: 'low', label: 'Low - Not urgent, fix when convenient' },
+  { value: 'medium', label: 'Medium - Needs attention soon' },
+  { value: 'high', label: 'High - Urgent, requires immediate attention' },
 ];
 
 interface FormState {
@@ -187,8 +187,6 @@ export default function TokenRequestPage() {
     setPageState('ready');
   }
 
-  // ── Render states ──────────────────────────────────────────────────────────
-
   if (pageState === 'loading') {
     return (
       <TenantShell>
@@ -202,9 +200,8 @@ export default function TokenRequestPage() {
       <TenantShell>
         <div className="max-w-lg mx-auto py-8">
           <Card className="text-center space-y-4">
-            <div className="text-5xl">🔗</div>
-            <h2 className="text-xl font-bold text-zinc-100">Link Not Found</h2>
-            <p className="text-zinc-400 text-sm">
+            <h2 className="text-xl font-bold text-[#1F3A5F]">Link Not Found</h2>
+            <p className="text-gray-500 text-sm">
               This submission link is invalid or may have been removed. Please contact your
               property manager for a new link.
             </p>
@@ -219,18 +216,17 @@ export default function TokenRequestPage() {
       <TenantShell>
         <div className="max-w-lg mx-auto py-8">
           <Card className="text-center space-y-6">
-            <div className="text-5xl">✅</div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-zinc-100">Request Submitted!</h2>
-              <p className="text-zinc-400">
-                Your maintenance request has been received. Our team will be in touch soon.
+              <h2 className="text-2xl font-bold text-[#1F3A5F]">Request Submitted</h2>
+              <p className="text-gray-500">
+                Your maintenance request has been received. Your property manager will be in touch.
               </p>
             </div>
             {successId && (
-              <div className="bg-sky-400/10 border border-sky-400/20 rounded-lg px-4 py-3">
-                <p className="text-sm text-sky-300 font-medium">Ticket ID</p>
-                <p className="text-lg font-mono font-bold text-sky-100">{successId}</p>
-                <p className="text-xs text-sky-400 mt-1">Save this for your records.</p>
+              <div className="bg-[#F6F7F8] border border-[#E2E5E7] rounded-lg px-4 py-3">
+                <p className="text-sm text-gray-500 font-medium">Reference Number</p>
+                <p className="text-lg font-mono font-bold text-[#1F3A5F]">{successId}</p>
+                <p className="text-xs text-gray-400 mt-1">Save this for your records.</p>
               </div>
             )}
             <Button onClick={handleReset} variant="secondary" className="w-full">
@@ -249,19 +245,18 @@ export default function TokenRequestPage() {
       <div className="max-w-2xl mx-auto">
         {/* Property banner */}
         {property && (
-          <div className="mb-6 flex items-start gap-3 bg-sky-400/10 border border-sky-400/20 rounded-xl px-5 py-4">
-            <span className="text-2xl mt-0.5">🏢</span>
+          <div className="mb-6 flex items-start gap-3 bg-[#1F3A5F]/5 border border-[#1F3A5F]/15 rounded-xl px-5 py-4">
             <div>
-              <p className="text-sm font-semibold text-sky-100">{property.name}</p>
-              <p className="text-sm text-sky-300">{property.address}</p>
+              <p className="text-sm font-semibold text-[#1F3A5F]">{property.name}</p>
+              <p className="text-sm text-gray-500">{property.address}</p>
             </div>
           </div>
         )}
 
         <div className="mb-8 space-y-1">
-          <h1 className="text-2xl font-bold text-zinc-100">Submit a Maintenance Request</h1>
-          <p className="text-zinc-400 text-sm">
-            Fill out the form below and we&apos;ll schedule a repair as soon as possible.
+          <h1 className="text-2xl font-bold text-[#1F3A5F]">Submit a Maintenance Request</h1>
+          <p className="text-gray-500 text-sm">
+            Fill out the form below and your property manager will follow up with you.
           </p>
         </div>
 
@@ -276,9 +271,8 @@ export default function TokenRequestPage() {
         )}
 
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
-          {/* Unit + tenant info */}
           <Card>
-            <h2 className="text-base font-semibold text-zinc-100 mb-4">Your Information</h2>
+            <h2 className="text-base font-semibold text-[#1F3A5F] mb-4">Your Information</h2>
             <div className="space-y-4">
               <Input
                 label="Unit / Apt #"
@@ -307,16 +301,15 @@ export default function TokenRequestPage() {
                   onChange={handleChange}
                   placeholder="(555) 000-0000"
                   error={errors.tenant_phone}
-                  hint="We'll use this to follow up on your request."
+                  hint="We will use this to follow up on your request."
                   required
                 />
               </div>
             </div>
           </Card>
 
-          {/* Issue details */}
           <Card>
-            <h2 className="text-base font-semibold text-zinc-100 mb-4">Issue Details</h2>
+            <h2 className="text-base font-semibold text-[#1F3A5F] mb-4">Issue Details</h2>
             <div className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <Select
@@ -353,16 +346,15 @@ export default function TokenRequestPage() {
             </div>
           </Card>
 
-          {/* Photo upload */}
           <Card>
-            <h2 className="text-base font-semibold text-zinc-100 mb-1">Photo (Optional)</h2>
-            <p className="text-sm text-zinc-400 mb-4">
-              Attach a photo to help us understand the issue better.
+            <h2 className="text-base font-semibold text-[#1F3A5F] mb-1">Photo (Optional)</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Attach a photo to help clarify the issue.
             </p>
 
             {photoPreview ? (
               <div className="space-y-3">
-                <div className="relative inline-block rounded-lg overflow-hidden border border-zinc-700">
+                <div className="relative inline-block rounded-lg overflow-hidden border border-[#E2E5E7]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={photoPreview}
@@ -371,19 +363,18 @@ export default function TokenRequestPage() {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-zinc-400 truncate max-w-xs">{photo?.name}</span>
+                  <span className="text-sm text-gray-500 truncate max-w-xs">{photo?.name}</span>
                   <Button type="button" variant="ghost" size="sm" onClick={removePhoto}>
                     Remove
                   </Button>
                 </div>
               </div>
             ) : (
-              <label className="flex flex-col items-center gap-3 border-2 border-dashed border-zinc-700 rounded-lg p-8 cursor-pointer hover:border-sky-400 hover:bg-sky-400/5 transition-colors">
-                <span className="text-3xl">📷</span>
+              <label className="flex flex-col items-center gap-3 border-2 border-dashed border-[#E2E5E7] rounded-lg p-8 cursor-pointer hover:border-[#1F3A5F] hover:bg-[#1F3A5F]/5 transition-colors">
                 <div className="text-center">
-                  <span className="text-sm font-medium text-sky-400">Click to upload</span>
-                  <span className="text-sm text-zinc-400"> or drag and drop</span>
-                  <p className="text-xs text-zinc-500 mt-1">PNG, JPG, WEBP up to 10 MB</p>
+                  <span className="text-sm font-medium text-[#1F3A5F]">Click to upload</span>
+                  <span className="text-sm text-gray-400"> or drag and drop</span>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP up to 10 MB</p>
                 </div>
                 <input
                   ref={fileRef}
