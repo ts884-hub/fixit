@@ -8,7 +8,7 @@ export async function sendEmail(
   html: string
 ): Promise<void> {
   const apiKey  = process.env.RESEND_API_KEY;
-  const fromAddress = process.env.RESEND_FROM_EMAIL ?? 'FixIt <notifications@fixit.app>';
+  const fromAddress = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev';
 
   if (!apiKey) {
     console.warn('[Email] RESEND_API_KEY not set — skipping email notification.');
