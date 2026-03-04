@@ -195,16 +195,14 @@ export async function POST(request: NextRequest) {
   // ── Resolve photo path → signed URL for notifications ─────────────────────
   const [ticket] = await resolvePhotoUrls(supabase, [data]);
 
-  // ── Send notifications (best-effort, never fail the response) ─────────────
+  // ── Send notifications (awaited so Vercel doesn't kill the function early) ──
   if (managerId) {
-    sendNotifications({
-      supabase,
-      managerId,
-      ticket,
-      propertyName,
-    }).catch((err) => {
+    try {
+      await sendNotifications({ supabase, managerId, ticket, propertyName });
+    } catch (err) {
+      // Notification failure never blocks the tenant's success response
       console.error('[POST /api/tickets] Notification error:', err);
-    });
+    }
   }
 
   return NextResponse.json(ticket, { status: 201 });
