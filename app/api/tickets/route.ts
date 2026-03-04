@@ -2,15 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth-server';
 import { BUCKET, resolvePhotoUrls } from '@/lib/storage';
+import { sendSms } from '@/lib/notify/sms';
+import { sendEmail } from '@/lib/notify/email';
+import {
+  formatSmsMessage,
+  formatEmailHtml,
+  formatEmailSubject,
+  type NotifyTicketData,
+} from '@/lib/notify/templates';
 
-const VALID_URGENCIES = ['low', 'medium', 'high'] as const;
-const VALID_STATUSES = ['new', 'in_progress', 'done'] as const;
+const VALID_URGENCIES   = ['low', 'medium', 'high'] as const;
+const VALID_STATUSES    = ['new', 'in_progress', 'done'] as const;
+const VALID_LOCATIONS   = [
+  'kitchen', 'bathroom', 'living_room', 'bedroom',
+  'hallway', 'laundry', 'exterior', 'common_area', 'other',
+] as const;
 
 // ─── GET /api/tickets ─────────────────────────────────────────────────────────
-// Protected. Returns tickets that belong to the authenticated manager,
-// sorted newest-first.
-// Query params: status=all|new|in_progress|done  q=<search term>
-// photo_url in each ticket is a fresh signed URL (1 hr) for the private bucket.
 
 export async function GET(request: NextRequest) {
   let user;
@@ -28,16 +36,13 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from('tickets')
     .select('*')
-    // Only return tickets that belong to this manager
     .eq('manager_id', user.id)
     .order('created_at', { ascending: false });
 
-  // Filter by status (ignore 'all' or missing)
   if (status && status !== 'all' && VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) {
     query = query.eq('status', status);
   }
 
-  // Full-text search across property, unit, tenant_name
   if (q) {
     query = query.or(
       `property.ilike.%${q}%,unit.ilike.%${q}%,tenant_name.ilike.%${q}%`
@@ -45,27 +50,18 @@ export async function GET(request: NextRequest) {
   }
 
   const { data, error } = await query;
-
   if (error) {
     console.error('[GET /api/tickets]', error);
     return NextResponse.json({ error: 'Failed to fetch tickets.' }, { status: 500 });
   }
 
-  // Resolve file paths → signed URLs (single batch round-trip)
   const tickets = await resolvePhotoUrls(supabase, data ?? []);
-
   return NextResponse.json(tickets);
 }
 
 // ─── POST /api/tickets ────────────────────────────────────────────────────────
 // Public (no auth). Accepts JSON or multipart/form-data.
-// Stores the file PATH (not a public URL) in photo_url — bucket is private.
-//
-// Optional field: property_token
-//   When present the server looks up the matching property row and
-//   automatically sets manager_id + property_id on the new ticket,
-//   and overrides the property field with the canonical property address.
-//   This keeps tenant routing invisible to the submitter.
+// Fires SMS + email notification after ticket insert.
 
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get('content-type') ?? '';
@@ -79,7 +75,6 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Failed to parse form data.' }, { status: 400 });
     }
-
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
         if (key === 'photo') photoFile = value;
@@ -88,7 +83,6 @@ export async function POST(request: NextRequest) {
       }
     }
   } else {
-    // JSON body
     let body: unknown;
     try {
       body = await request.json();
@@ -98,46 +92,41 @@ export async function POST(request: NextRequest) {
     fields = body as Record<string, string>;
   }
 
-  // ── Resolve property_token (optional) ──────────────────────────────────────
-  // If a token is present, look up the property and derive manager_id,
-  // property_id, and the canonical property address.
+  // ── Resolve property_token ─────────────────────────────────────────────────
   let managerId: string | null = null;
   let propertyId: string | null = null;
+  let propertyName: string = '';
+
+  const supabase = createAdminClient();
 
   if (fields.property_token) {
-    const supabase = createAdminClient();
     const { data: prop, error: propError } = await supabase
       .from('properties')
-      .select('id, address, manager_id')
+      .select('id, name, address, manager_id')
       .eq('token', fields.property_token)
       .single();
 
     if (propError || !prop) {
       return NextResponse.json(
-        { error: 'Invalid property_token. The submission link may have expired or be incorrect.' },
+        { error: 'Invalid property link. Please contact your property manager.' },
         { status: 400 }
       );
     }
 
-    // Override the property field with the DB-authoritative address
     fields.property = prop.address;
     managerId = prop.manager_id;
     propertyId = prop.id;
+    propertyName = prop.name;
   }
 
-  // ── Validate required fields ────────────────────────────────────────────────
+  // ── Validate required fields ───────────────────────────────────────────────
   const required = [
-    'property',
-    'unit',
-    'tenant_name',
-    'tenant_phone',
-    'category',
-    'description',
-    'urgency',
+    'property', 'unit', 'tenant_name', 'tenant_phone',
+    'category', 'description', 'urgency', 'location_area',
   ] as const;
 
   for (const field of required) {
-    if (!fields[field] || typeof fields[field] !== 'string' || !fields[field].trim()) {
+    if (!fields[field]?.trim()) {
       return NextResponse.json({ error: `${field} is required.` }, { status: 400 });
     }
   }
@@ -149,18 +138,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = createAdminClient();
+  if (!VALID_LOCATIONS.includes(fields.location_area as typeof VALID_LOCATIONS[number])) {
+    return NextResponse.json(
+      { error: `location_area must be one of: ${VALID_LOCATIONS.join(', ')}.` },
+      { status: 400 }
+    );
+  }
 
-  // photo_url stores the STORAGE FILE PATH (e.g. "photos/uuid.jpg").
-  // Signed URLs are generated on read — never stored in the DB.
+  // ── Photo upload (non-fatal) ───────────────────────────────────────────────
   let photoPath: string | null = null;
 
   if (photoFile && photoFile.size > 0) {
     const ext = photoFile.name.split('.').pop() ?? 'jpg';
     const filePath = `photos/${crypto.randomUUID()}.${ext}`;
-
-    const arrayBuffer = await photoFile.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
+    const buffer = new Uint8Array(await photoFile.arrayBuffer());
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
@@ -171,26 +162,27 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error('[POST /api/tickets] photo upload failed:', uploadError);
-      // Non-fatal — ticket is created without a photo
     } else {
       photoPath = filePath;
     }
   }
 
+  // ── Insert ticket ──────────────────────────────────────────────────────────
   const { data, error } = await supabase
     .from('tickets')
     .insert({
-      property: fields.property.trim(),
-      unit: fields.unit.trim(),
-      tenant_name: fields.tenant_name.trim(),
-      tenant_phone: fields.tenant_phone.trim(),
-      category: fields.category.trim(),
-      description: fields.description.trim(),
-      urgency: fields.urgency,
-      photo_url: photoPath, // stored as a path, resolved to signed URL on read
-      // Set when submitted via a property token; null for anonymous submissions
-      manager_id: managerId,
-      property_id: propertyId,
+      property:       fields.property.trim(),
+      unit:           fields.unit.trim(),
+      tenant_name:    fields.tenant_name.trim(),
+      tenant_phone:   fields.tenant_phone.trim(),
+      category:       fields.category.trim(),
+      description:    fields.description.trim(),
+      urgency:        fields.urgency,
+      location_area:  fields.location_area,
+      location_notes: fields.location_notes?.trim() || null,
+      photo_url:      photoPath,
+      manager_id:     managerId,
+      property_id:    propertyId,
     })
     .select()
     .single();
@@ -200,7 +192,86 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create ticket.' }, { status: 500 });
   }
 
-  // Resolve the path to a signed URL before returning to the client
+  // ── Resolve photo path → signed URL for notifications ─────────────────────
   const [ticket] = await resolvePhotoUrls(supabase, [data]);
+
+  // ── Send notifications (best-effort, never fail the response) ─────────────
+  if (managerId) {
+    sendNotifications({
+      supabase,
+      managerId,
+      ticket,
+      propertyName,
+    }).catch((err) => {
+      console.error('[POST /api/tickets] Notification error:', err);
+    });
+  }
+
   return NextResponse.json(ticket, { status: 201 });
+}
+
+// ─── Notification helper ───────────────────────────────────────────────────────
+
+async function sendNotifications({
+  supabase,
+  managerId,
+  ticket,
+  propertyName,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any;
+  managerId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ticket: any;
+  propertyName: string;
+}) {
+  const appBaseUrl = process.env.APP_BASE_URL ?? '';
+
+  // Fetch manager auth user (for email)
+  const { data: authData } = await supabase.auth.admin.getUserById(managerId);
+  const managerEmail = authData?.user?.email;
+
+  // Fetch manager profile (for phone)
+  const { data: profile } = await supabase
+    .from('manager_profiles')
+    .select('phone, email')
+    .eq('id', managerId)
+    .single();
+
+  const managerPhone = profile?.phone;
+  const notifyEmail  = managerEmail ?? profile?.email;
+
+  const notifyData: NotifyTicketData = {
+    id:             ticket.id,
+    property_name:  propertyName || ticket.property,
+    property:       ticket.property,
+    unit:           ticket.unit,
+    location_area:  ticket.location_area,
+    location_notes: ticket.location_notes,
+    category:       ticket.category,
+    urgency:        ticket.urgency,
+    description:    ticket.description,
+    photo_url:      ticket.photo_url ?? null,
+    tenant_name:    ticket.tenant_name,
+    tenant_phone:   ticket.tenant_phone,
+  };
+
+  const results = await Promise.allSettled([
+    managerPhone
+      ? sendSms(managerPhone, formatSmsMessage(notifyData, appBaseUrl))
+      : Promise.resolve(),
+    notifyEmail
+      ? sendEmail(
+          notifyEmail,
+          formatEmailSubject(notifyData),
+          formatEmailHtml(notifyData, appBaseUrl)
+        )
+      : Promise.resolve(),
+  ]);
+
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      console.error(`[Notification] ${i === 0 ? 'SMS' : 'Email'} failed:`, r.reason);
+    }
+  });
 }

@@ -11,6 +11,17 @@ export type TicketUrgency = 'low' | 'medium' | 'high';
 
 export type TicketStatus = 'new' | 'in_progress' | 'done';
 
+export type TicketLocationArea =
+  | 'kitchen'
+  | 'bathroom'
+  | 'living_room'
+  | 'bedroom'
+  | 'hallway'
+  | 'laundry'
+  | 'exterior'
+  | 'common_area'
+  | 'other';
+
 export interface Ticket {
   id: string;
   created_at: string;
@@ -22,11 +33,13 @@ export interface Ticket {
   description: string;
   urgency: TicketUrgency;
   status: TicketStatus;
+  /** Where inside the unit the problem is located. */
+  location_area: TicketLocationArea;
+  /** Free-text notes when location_area is "other". */
+  location_notes?: string | null;
   photo_url?: string;
   manager_notes?: string;
-  /** Supabase Auth UID of the manager who owns this ticket (set via property token). */
   manager_id?: string;
-  /** FK to the properties table (set via property token). */
   property_id?: string;
 }
 
@@ -38,12 +51,9 @@ export interface CreateTicketPayload {
   category: TicketCategory;
   description: string;
   urgency: TicketUrgency;
+  location_area: TicketLocationArea;
+  location_notes?: string | null;
   photo?: File;
-  /**
-   * When provided, the server looks up the matching property and
-   * automatically assigns manager_id + property_id to the ticket.
-   * Tenants never see or choose a manager — the token routes silently.
-   */
   property_token?: string;
 }
 
@@ -62,27 +72,34 @@ export interface ApiError {
 export interface Property {
   id: string;
   created_at: string;
-  /** Human-readable label, e.g. "Sunset Apartments Block A". */
   name: string;
-  /** Street address stored in ticket.property when submitted via this link. */
   address: string;
-  /** Random 32-char hex slug — forms the tenant URL: /request/<token> */
   token: string;
-  /** Supabase Auth UID of the manager who created this property. */
   manager_id: string;
 }
 
 export interface CreatePropertyPayload {
-  /** Human-readable label for the property. */
   name: string;
-  /** Street / mailing address of the property. */
   address: string;
 }
 
-/** Public-safe subset returned by GET /api/properties/:token (no manager_id). */
 export interface PublicProperty {
   id: string;
   name: string;
   address: string;
   token: string;
+}
+
+// ─── Manager Profile ──────────────────────────────────────────────────────────
+
+export interface ManagerProfile {
+  id: string;
+  created_at: string;
+  phone: string;
+  email: string;
+}
+
+export interface UpsertProfilePayload {
+  phone: string;
+  email: string;
 }

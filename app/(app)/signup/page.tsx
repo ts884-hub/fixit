@@ -13,12 +13,14 @@ interface FormState {
   email: string;
   password: string;
   confirmPassword: string;
+  phone: string;
 }
 
 interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  phone?: string;
 }
 
 function validate(form: FormState): FormErrors {
@@ -38,6 +40,11 @@ function validate(form: FormState): FormErrors {
   } else if (form.password !== form.confirmPassword) {
     errors.confirmPassword = 'Passwords do not match.';
   }
+  if (!form.phone.trim()) {
+    errors.phone = 'Phone number is required.';
+  } else if (!/^[\+]?[\d\s\-\(\)]{7,20}$/.test(form.phone.trim())) {
+    errors.phone = 'Enter a valid phone number.';
+  }
   return errors;
 }
 
@@ -47,6 +54,7 @@ export default function SignupPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    phone: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -85,7 +93,11 @@ export default function SignupPage() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, password: form.password }),
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
+        }),
       });
       const data = await res.json();
 
@@ -142,6 +154,18 @@ export default function SignupPage() {
             placeholder="you@example.com"
             error={errors.email}
             autoComplete="email"
+            required
+          />
+          <Input
+            label="Phone Number"
+            name="phone"
+            type="tel"
+            value={form.phone}
+            onChange={handleChange}
+            placeholder="+1 (555) 000-0000"
+            error={errors.phone}
+            hint="Used for SMS maintenance alerts. Include country code for best results."
+            autoComplete="tel"
             required
           />
           <Input

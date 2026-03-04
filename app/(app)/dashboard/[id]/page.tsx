@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { requireAuth } from '@/lib/auth';
 import { getTicket, updateTicket } from '@/lib/api';
-import type { Ticket, TicketStatus } from '@/lib/types';
+import type { Ticket, TicketStatus, TicketLocationArea } from '@/lib/types';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Select } from '@/components/Select';
@@ -15,10 +15,22 @@ import { PageSpinner } from '@/components/Spinner';
 import { Alert, useToast } from '@/components/Toast';
 
 const STATUS_OPTIONS: { value: TicketStatus; label: string }[] = [
-  { value: 'new', label: 'New' },
+  { value: 'new',         label: 'New' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'done', label: 'Done' },
+  { value: 'done',        label: 'Done' },
 ];
+
+const LOCATION_LABELS: Record<TicketLocationArea, string> = {
+  kitchen:     'Kitchen',
+  bathroom:    'Bathroom',
+  living_room: 'Living Room',
+  bedroom:     'Bedroom',
+  hallway:     'Hallway',
+  laundry:     'Laundry',
+  exterior:    'Exterior',
+  common_area: 'Common Area',
+  other:       'Other',
+};
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -31,11 +43,8 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+    month: 'long', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit',
   });
 }
 
@@ -48,7 +57,7 @@ export default function TicketDetailPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string>('');
+  const [fetchError, setFetchError] = useState('');
 
   const [status, setStatus] = useState<TicketStatus>('new');
   const [notes, setNotes] = useState('');
@@ -64,25 +73,19 @@ export default function TicketDetailPage() {
 
   useEffect(() => {
     if (!authChecked || !id) return;
-    fetchTicketData();
-  }, [authChecked, id]);
-
-  async function fetchTicketData() {
     setLoading(true);
     setFetchError('');
-    try {
-      const data = await getTicket(id);
-      setTicket(data);
-      setStatus(data.status);
-      setNotes(data.manager_notes ?? '');
-    } catch (err) {
-      setFetchError(
-        err instanceof Error ? err.message : 'Failed to load ticket details.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+    getTicket(id)
+      .then((data) => {
+        setTicket(data);
+        setStatus(data.status);
+        setNotes(data.manager_notes ?? '');
+      })
+      .catch((err) => {
+        setFetchError(err instanceof Error ? err.message : 'Failed to load ticket details.');
+      })
+      .finally(() => setLoading(false));
+  }, [authChecked, id]);
 
   async function handleSave() {
     if (!ticket) return;
@@ -92,7 +95,7 @@ export default function TicketDetailPage() {
       const updated = await updateTicket(id, { status, manager_notes: notes });
       setTicket(updated);
       setDirty(false);
-      showToast('Ticket updated successfully.', 'success');
+      showToast('Ticket updated.', 'success');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to save changes.';
       setSaveError(msg);
@@ -107,25 +110,21 @@ export default function TicketDetailPage() {
   if (fetchError) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <Link href="/dashboard" className="text-sm text-[#1F3A5F] hover:underline">
-          &larr; Back to Tickets
-        </Link>
+        <Link href="/dashboard" className="text-sm text-[#1F3A5F] hover:underline">&larr; Back</Link>
         <Alert type="error" message={fetchError} />
-        <Button variant="secondary" onClick={fetchTicketData}>
-          Try Again
-        </Button>
       </div>
     );
   }
 
   if (!ticket) return null;
 
+  const locationDisplay = ticket.location_area
+    ? `${LOCATION_LABELS[ticket.location_area] ?? ticket.location_area}${ticket.location_notes ? ` — ${ticket.location_notes}` : ''}`
+    : '—';
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-1 text-sm text-[#1F3A5F] hover:underline"
-      >
+      <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-[#1F3A5F] hover:underline">
         &larr; Back to Tickets
       </Link>
 
@@ -134,7 +133,6 @@ export default function TicketDetailPage() {
         <StatusBadge status={ticket.status} />
         <UrgencyBadge urgency={ticket.urgency} />
       </div>
-
       <p className="text-sm text-gray-400">Submitted {formatDate(ticket.created_at)}</p>
 
       {/* Details */}
@@ -143,24 +141,18 @@ export default function TicketDetailPage() {
         <dl>
           <DetailRow label="Property" value={ticket.property} />
           <DetailRow label="Unit" value={ticket.unit} />
+          <DetailRow label="Location" value={<span className="font-medium">{locationDisplay}</span>} />
           <DetailRow label="Tenant" value={ticket.tenant_name} />
-          <DetailRow
-            label="Phone"
-            value={
-              <a href={`tel:${ticket.tenant_phone}`} className="text-[#1F3A5F] hover:underline">
-                {ticket.tenant_phone}
-              </a>
-            }
-          />
-          <DetailRow
-            label="Category"
-            value={<Badge className="capitalize">{ticket.category}</Badge>}
-          />
+          <DetailRow label="Phone" value={
+            <a href={`tel:${ticket.tenant_phone}`} className="text-[#1F3A5F] hover:underline">
+              {ticket.tenant_phone}
+            </a>
+          } />
+          <DetailRow label="Category" value={<Badge className="capitalize">{ticket.category}</Badge>} />
           <DetailRow label="Urgency" value={<UrgencyBadge urgency={ticket.urgency} />} />
-          <DetailRow
-            label="Description"
-            value={<p className="whitespace-pre-wrap text-[#2E2E2E]">{ticket.description}</p>}
-          />
+          <DetailRow label="Description" value={
+            <p className="whitespace-pre-wrap text-[#2E2E2E]">{ticket.description}</p>
+          } />
         </dl>
       </Card>
 
@@ -192,34 +184,22 @@ export default function TicketDetailPage() {
             label="Status"
             options={STATUS_OPTIONS}
             value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as TicketStatus);
-              setDirty(true);
-            }}
+            onChange={(e) => { setStatus(e.target.value as TicketStatus); setDirty(true); }}
           />
-
           <Textarea
             label="Manager Notes"
             value={notes}
-            onChange={(e) => {
-              setNotes(e.target.value);
-              setDirty(true);
-            }}
+            onChange={(e) => { setNotes(e.target.value); setDirty(true); }}
             placeholder="Add internal notes, next steps, or resolution details..."
             rows={4}
             hint="Notes are internal and not visible to the tenant."
           />
-
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} loading={saving} disabled={!dirty}>
               Save Changes
             </Button>
-            {!dirty && !saving && (
-              <span className="text-xs text-gray-400">No unsaved changes.</span>
-            )}
-            {dirty && !saving && (
-              <span className="text-xs text-amber-600">You have unsaved changes.</span>
-            )}
+            {!dirty && !saving && <span className="text-xs text-gray-400">No unsaved changes.</span>}
+            {dirty && !saving && <span className="text-xs text-amber-600">You have unsaved changes.</span>}
           </div>
         </div>
       </Card>

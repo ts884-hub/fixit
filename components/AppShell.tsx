@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { isAuthed, logout } from '@/lib/auth';
+import { getProfile } from '@/lib/api';
 import { Button } from './Button';
 
 interface AppShellProps {
@@ -16,8 +17,21 @@ export function AppShell({ children }: AppShellProps) {
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
-    setAuthed(isAuthed());
-  }, [pathname]);
+    const isLoggedIn = isAuthed();
+    setAuthed(isLoggedIn);
+
+    // If logged in and not already on settings, check for profile.
+    // If no profile exists, redirect to settings to complete setup.
+    if (isLoggedIn && !pathname.startsWith('/dashboard/settings')) {
+      getProfile().then((profile) => {
+        if (!profile) {
+          router.replace('/dashboard/settings');
+        }
+      }).catch(() => {
+        // Silently ignore — don't block the UI if profile check fails
+      });
+    }
+  }, [pathname, router]);
 
   function handleLogout() {
     logout();
@@ -25,68 +39,45 @@ export function AppShell({ children }: AppShellProps) {
     router.push('/login');
   }
 
+  const navLink = (href: string, label: string, exact = false) => {
+    const active = exact ? pathname === href : pathname.startsWith(href);
+    return (
+      <Link
+        href={href}
+        className={[
+          'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+          active
+            ? 'bg-[#1F3A5F]/10 text-[#1F3A5F]'
+            : 'text-[#2E2E2E] hover:bg-[#F6F7F8] hover:text-[#1F3A5F]',
+        ].join(' ')}
+      >
+        {label}
+      </Link>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#F6F7F8] flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-[#E2E5E7] sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          {/* Brand */}
-          <Link
-            href="/"
-            className="font-bold text-[#1F3A5F] text-base sm:text-lg tracking-tight"
-          >
+          <Link href="/" className="font-bold text-[#1F3A5F] text-base sm:text-lg tracking-tight">
             FixIt
           </Link>
 
-          {/* Nav */}
           <nav className="flex items-center gap-1 sm:gap-2">
             {authed ? (
               <>
-                <Link
-                  href="/dashboard"
-                  className={[
-                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                    pathname.startsWith('/dashboard') &&
-                    !pathname.startsWith('/dashboard/properties')
-                      ? 'bg-[#1F3A5F]/10 text-[#1F3A5F]'
-                      : 'text-[#2E2E2E] hover:bg-[#F6F7F8] hover:text-[#1F3A5F]',
-                  ].join(' ')}
-                >
-                  Tickets
-                </Link>
-                <Link
-                  href="/dashboard/properties"
-                  className={[
-                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                    pathname.startsWith('/dashboard/properties')
-                      ? 'bg-[#1F3A5F]/10 text-[#1F3A5F]'
-                      : 'text-[#2E2E2E] hover:bg-[#F6F7F8] hover:text-[#1F3A5F]',
-                  ].join(' ')}
-                >
-                  Properties
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="text-[#2E2E2E]"
-                >
+                {navLink('/dashboard', 'Tickets', true)}
+                {navLink('/dashboard/properties', 'Properties')}
+                {navLink('/dashboard/settings', 'Settings')}
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-[#2E2E2E]">
                   Logout
                 </Button>
               </>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  className={[
-                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                    pathname === '/login'
-                      ? 'bg-[#1F3A5F]/10 text-[#1F3A5F]'
-                      : 'text-[#2E2E2E] hover:bg-[#F6F7F8] hover:text-[#1F3A5F]',
-                  ].join(' ')}
-                >
-                  Log In
-                </Link>
+                {navLink('/login', 'Log In', true)}
                 <Link
                   href="/signup"
                   className={[
@@ -104,12 +95,10 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </header>
 
-      {/* Page content */}
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">{children}</div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-white border-t border-[#E2E5E7] py-4 text-center text-xs text-gray-400">
         &copy; {new Date().getFullYear()} FixIt &mdash; Property Maintenance Management
       </footer>

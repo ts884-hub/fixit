@@ -7,6 +7,7 @@ import type {
   CreateTicketPayload,
   TicketCategory,
   TicketUrgency,
+  TicketLocationArea,
   PublicProperty,
 } from '@/lib/types';
 import { Input } from '@/components/Input';
@@ -19,19 +20,31 @@ import { PageSpinner } from '@/components/Spinner';
 import { TenantShell } from '@/components/TenantShell';
 
 const CATEGORY_OPTIONS: { value: TicketCategory; label: string }[] = [
-  { value: 'plumbing', label: 'Plumbing' },
+  { value: 'plumbing',   label: 'Plumbing' },
   { value: 'electrical', label: 'Electrical' },
-  { value: 'hvac', label: 'HVAC / Heating & Cooling' },
-  { value: 'appliance', label: 'Appliance' },
-  { value: 'pest', label: 'Pest Control' },
-  { value: 'lock', label: 'Lock / Entry' },
-  { value: 'other', label: 'Other' },
+  { value: 'hvac',       label: 'HVAC / Heating & Cooling' },
+  { value: 'appliance',  label: 'Appliance' },
+  { value: 'pest',       label: 'Pest Control' },
+  { value: 'lock',       label: 'Lock / Entry' },
+  { value: 'other',      label: 'Other' },
 ];
 
 const URGENCY_OPTIONS: { value: TicketUrgency; label: string }[] = [
-  { value: 'low', label: 'Low - Not urgent, fix when convenient' },
-  { value: 'medium', label: 'Medium - Needs attention soon' },
-  { value: 'high', label: 'High - Urgent, requires immediate attention' },
+  { value: 'low',    label: 'Low — Not urgent, fix when convenient' },
+  { value: 'medium', label: 'Medium — Needs attention soon' },
+  { value: 'high',   label: 'High — Urgent, requires immediate attention' },
+];
+
+const LOCATION_OPTIONS: { value: TicketLocationArea; label: string }[] = [
+  { value: 'kitchen',     label: 'Kitchen' },
+  { value: 'bathroom',    label: 'Bathroom' },
+  { value: 'living_room', label: 'Living Room' },
+  { value: 'bedroom',     label: 'Bedroom' },
+  { value: 'hallway',     label: 'Hallway' },
+  { value: 'laundry',     label: 'Laundry' },
+  { value: 'exterior',    label: 'Exterior' },
+  { value: 'common_area', label: 'Common Area' },
+  { value: 'other',       label: 'Other' },
 ];
 
 interface FormState {
@@ -40,6 +53,8 @@ interface FormState {
   tenant_phone: string;
   category: TicketCategory | '';
   urgency: TicketUrgency | '';
+  location_area: TicketLocationArea | '';
+  location_notes: string;
   description: string;
 }
 
@@ -49,6 +64,7 @@ interface FormErrors {
   tenant_phone?: string;
   category?: string;
   urgency?: string;
+  location_area?: string;
   description?: string;
 }
 
@@ -58,24 +74,23 @@ const INITIAL_FORM: FormState = {
   tenant_phone: '',
   category: '',
   urgency: '',
+  location_area: '',
+  location_notes: '',
   description: '',
 };
 
-function validatePhone(phone: string): boolean {
-  return /^[\+]?[\d\s\-\(\)]{7,15}$/.test(phone.trim());
-}
-
 function validate(form: FormState): FormErrors {
   const errors: FormErrors = {};
-  if (!form.unit.trim()) errors.unit = 'Unit number is required.';
+  if (!form.unit.trim())        errors.unit        = 'Unit number is required.';
   if (!form.tenant_name.trim()) errors.tenant_name = 'Your name is required.';
   if (!form.tenant_phone.trim()) {
     errors.tenant_phone = 'Phone number is required.';
-  } else if (!validatePhone(form.tenant_phone)) {
+  } else if (!/^[\+]?[\d\s\-\(\)]{7,15}$/.test(form.tenant_phone.trim())) {
     errors.tenant_phone = 'Enter a valid phone number.';
   }
-  if (!form.category) errors.category = 'Please select a category.';
-  if (!form.urgency) errors.urgency = 'Please select an urgency level.';
+  if (!form.category)     errors.category     = 'Please select a category.';
+  if (!form.urgency)      errors.urgency      = 'Please select an urgency level.';
+  if (!form.location_area) errors.location_area = 'Please select where the problem is located.';
   if (!form.description.trim()) {
     errors.description = 'Please describe the issue.';
   } else if (form.description.trim().length < 10) {
@@ -84,7 +99,7 @@ function validate(form: FormState): FormErrors {
   return errors;
 }
 
-type PageState = 'loading' | 'ready' | 'submitting' | 'success' | 'error' | 'not_found';
+type PageState = 'loading' | 'ready' | 'submitting' | 'success' | 'not_found' | 'error';
 
 export default function TokenRequestPage() {
   const params = useParams<{ token: string }>();
@@ -97,23 +112,15 @@ export default function TokenRequestPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [successId, setSuccessId] = useState<string>('');
-  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [successId, setSuccessId] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!token) {
-      setPageState('not_found');
-      return;
-    }
+    if (!token) { setPageState('not_found'); return; }
     getPropertyByToken(token)
-      .then((prop) => {
-        setProperty(prop);
-        setPageState('ready');
-      })
-      .catch(() => {
-        setPageState('not_found');
-      });
+      .then((prop) => { setProperty(prop); setPageState('ready'); })
+      .catch(() => setPageState('not_found'));
   }, [token]);
 
   function handleChange(
@@ -129,11 +136,7 @@ export default function TokenRequestPage() {
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     setPhoto(file);
-    if (file) {
-      setPhotoPreview(URL.createObjectURL(file));
-    } else {
-      setPhotoPreview(null);
-    }
+    setPhotoPreview(file ? URL.createObjectURL(file) : null);
   }
 
   function removePhoto() {
@@ -161,6 +164,8 @@ export default function TokenRequestPage() {
         tenant_phone: form.tenant_phone,
         category: form.category as TicketCategory,
         urgency: form.urgency as TicketUrgency,
+        location_area: form.location_area as TicketLocationArea,
+        location_notes: form.location_notes || null,
         description: form.description,
         property_token: token,
         ...(photo ? { photo } : {}),
@@ -169,9 +174,7 @@ export default function TokenRequestPage() {
       setSuccessId(ticket.id);
       setPageState('success');
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.';
-      setErrorMsg(message);
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       setPageState('error');
     }
   }
@@ -187,13 +190,7 @@ export default function TokenRequestPage() {
     setPageState('ready');
   }
 
-  if (pageState === 'loading') {
-    return (
-      <TenantShell>
-        <PageSpinner />
-      </TenantShell>
-    );
-  }
+  if (pageState === 'loading') return <TenantShell><PageSpinner /></TenantShell>;
 
   if (pageState === 'not_found') {
     return (
@@ -243,13 +240,10 @@ export default function TokenRequestPage() {
   return (
     <TenantShell>
       <div className="max-w-2xl mx-auto">
-        {/* Property banner */}
         {property && (
-          <div className="mb-6 flex items-start gap-3 bg-[#1F3A5F]/5 border border-[#1F3A5F]/15 rounded-xl px-5 py-4">
-            <div>
-              <p className="text-sm font-semibold text-[#1F3A5F]">{property.name}</p>
-              <p className="text-sm text-gray-500">{property.address}</p>
-            </div>
+          <div className="mb-6 bg-[#1F3A5F]/5 border border-[#1F3A5F]/15 rounded-xl px-5 py-4">
+            <p className="text-sm font-semibold text-[#1F3A5F]">{property.name}</p>
+            <p className="text-sm text-gray-500">{property.address}</p>
           </div>
         )}
 
@@ -271,6 +265,7 @@ export default function TokenRequestPage() {
         )}
 
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
+          {/* Your Information */}
           <Card>
             <h2 className="text-base font-semibold text-[#1F3A5F] mb-4">Your Information</h2>
             <div className="space-y-4">
@@ -301,16 +296,39 @@ export default function TokenRequestPage() {
                   onChange={handleChange}
                   placeholder="(555) 000-0000"
                   error={errors.tenant_phone}
-                  hint="We will use this to follow up on your request."
+                  hint="Used to follow up on your request."
                   required
                 />
               </div>
             </div>
           </Card>
 
+          {/* Issue Details */}
           <Card>
             <h2 className="text-base font-semibold text-[#1F3A5F] mb-4">Issue Details</h2>
             <div className="space-y-4">
+              <Select
+                label="Where is the problem?"
+                name="location_area"
+                value={form.location_area}
+                onChange={handleChange}
+                options={LOCATION_OPTIONS}
+                placeholder="Select a location"
+                error={errors.location_area}
+                required
+              />
+
+              {form.location_area === 'other' && (
+                <Input
+                  label="Describe the location"
+                  name="location_notes"
+                  value={form.location_notes}
+                  onChange={handleChange}
+                  placeholder="e.g. Basement utility room, back porch..."
+                  hint="Optional — helps the manager find the problem faster."
+                />
+              )}
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <Select
                   label="Category"
@@ -346,27 +364,20 @@ export default function TokenRequestPage() {
             </div>
           </Card>
 
+          {/* Photo */}
           <Card>
             <h2 className="text-base font-semibold text-[#1F3A5F] mb-1">Photo (Optional)</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Attach a photo to help clarify the issue.
-            </p>
+            <p className="text-sm text-gray-500 mb-4">Attach a photo to help clarify the issue.</p>
 
             {photoPreview ? (
               <div className="space-y-3">
-                <div className="relative inline-block rounded-lg overflow-hidden border border-[#E2E5E7]">
+                <div className="inline-block rounded-lg overflow-hidden border border-[#E2E5E7]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photoPreview}
-                    alt="Preview"
-                    className="max-h-48 max-w-full object-contain"
-                  />
+                  <img src={photoPreview} alt="Preview" className="max-h-48 max-w-full object-contain" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500 truncate max-w-xs">{photo?.name}</span>
-                  <Button type="button" variant="ghost" size="sm" onClick={removePhoto}>
-                    Remove
-                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={removePhoto}>Remove</Button>
                 </div>
               </div>
             ) : (
@@ -388,12 +399,7 @@ export default function TokenRequestPage() {
           </Card>
 
           <div className="flex justify-end">
-            <Button
-              type="submit"
-              loading={isSubmitting}
-              size="lg"
-              className="w-full sm:w-auto"
-            >
+            <Button type="submit" loading={isSubmitting} size="lg" className="w-full sm:w-auto">
               Submit Request
             </Button>
           </div>

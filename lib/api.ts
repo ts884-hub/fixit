@@ -5,6 +5,8 @@ import type {
   Property,
   CreatePropertyPayload,
   PublicProperty,
+  ManagerProfile,
+  UpsertProfilePayload,
 } from './types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
@@ -20,7 +22,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     let message = `Request failed with status ${res.status}`;
     try {
       const body = await res.json();
-      message = body.message ?? message;
+      message = body.message ?? body.error ?? message;
     } catch {
       // ignore parse error
     }
@@ -49,9 +51,7 @@ export async function getTicket(id: string): Promise<Ticket> {
   return handleResponse<Ticket>(res);
 }
 
-export async function createTicket(
-  payload: CreateTicketPayload
-): Promise<Ticket> {
+export async function createTicket(payload: CreateTicketPayload): Promise<Ticket> {
   let body: BodyInit;
   let headers: Record<string, string> = {};
 
@@ -64,6 +64,8 @@ export async function createTicket(
     form.append('category', payload.category);
     form.append('description', payload.description);
     form.append('urgency', payload.urgency);
+    form.append('location_area', payload.location_area);
+    if (payload.location_notes) form.append('location_notes', payload.location_notes);
     form.append('photo', payload.photo);
     if (payload.property_token) form.append('property_token', payload.property_token);
     body = form;
@@ -81,16 +83,10 @@ export async function createTicket(
   return handleResponse<Ticket>(res);
 }
 
-export async function updateTicket(
-  id: string,
-  patch: UpdateTicketPayload
-): Promise<Ticket> {
+export async function updateTicket(id: string, patch: UpdateTicketPayload): Promise<Ticket> {
   const res = await fetch(`${BASE_URL}/api/tickets/${id}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(patch),
   });
   return handleResponse<Ticket>(res);
@@ -98,7 +94,6 @@ export async function updateTicket(
 
 // ─── Properties ──────────────────────────────────────────────────────────────
 
-/** List all properties belonging to the authenticated manager. */
 export async function listProperties(): Promise<Property[]> {
   const res = await fetch(`${BASE_URL}/api/properties`, {
     headers: { ...getAuthHeaders() },
@@ -107,42 +102,52 @@ export async function listProperties(): Promise<Property[]> {
   return handleResponse<Property[]>(res);
 }
 
-/** Create a new property for the authenticated manager. Returns the created property. */
-export async function createProperty(
-  payload: CreatePropertyPayload
-): Promise<Property> {
+export async function createProperty(payload: CreatePropertyPayload): Promise<Property> {
   const res = await fetch(`${BASE_URL}/api/properties`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-    },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(payload),
   });
   return handleResponse<Property>(res);
 }
 
-/**
- * Fetch a property by its submission token (public — no auth required).
- * Used by the tenant intake form to display the property name/address.
- */
 export async function getPropertyByToken(token: string): Promise<PublicProperty> {
-  const res = await fetch(`${BASE_URL}/api/properties/${token}`, {
-    cache: 'no-store',
-  });
+  const res = await fetch(`${BASE_URL}/api/properties/${token}`, { cache: 'no-store' });
   return handleResponse<PublicProperty>(res);
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
-export async function loginRequest(
-  email: string,
-  password: string
-): Promise<{ token: string }> {
+export async function loginRequest(email: string, password: string): Promise<{ token: string }> {
   const res = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
   return handleResponse<{ token: string }>(res);
+}
+
+// ─── Manager Profile ──────────────────────────────────────────────────────────
+
+/**
+ * Fetch the authenticated manager's profile.
+ * Returns null if no profile exists yet (404).
+ */
+export async function getProfile(): Promise<ManagerProfile | null> {
+  const res = await fetch(`${BASE_URL}/api/profile`, {
+    headers: { ...getAuthHeaders() },
+    cache: 'no-store',
+  });
+  if (res.status === 404) return null;
+  return handleResponse<ManagerProfile>(res);
+}
+
+/** Create or update the authenticated manager's profile. */
+export async function upsertProfile(payload: UpsertProfilePayload): Promise<ManagerProfile> {
+  const res = await fetch(`${BASE_URL}/api/profile`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<ManagerProfile>(res);
 }
