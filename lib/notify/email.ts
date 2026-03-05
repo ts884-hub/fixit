@@ -1,9 +1,8 @@
 /**
  * Send an email to a property manager via Resend REST API (no SDK dependency).
  *
- * FROM defaults to "FixIt Alerts <onboarding@resend.dev>" — this works on
- * all Resend accounts with no domain verification required.
- * Set RESEND_FROM_EMAIL to override once you have a verified custom domain.
+ * FROM defaults to "FixIt Alerts <alerts@usefixit.cv>" (verified domain).
+ * Override by setting RESEND_FROM_EMAIL in your environment variables.
  *
  * Silently skips if RESEND_API_KEY is not set.
  */
@@ -20,9 +19,9 @@ export async function sendManagerEmail({
 }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
 
-  // Default includes display name — works without a verified domain
+  // Verified domain sender — override via RESEND_FROM_EMAIL env var if needed
   const fromAddress =
-    process.env.RESEND_FROM_EMAIL ?? 'FixIt Alerts <onboarding@resend.dev>';
+    process.env.RESEND_FROM_EMAIL ?? 'FixIt Alerts <alerts@usefixit.cv>';
 
   if (!apiKey) {
     console.warn('[Email] RESEND_API_KEY not set — skipping email notification.');
