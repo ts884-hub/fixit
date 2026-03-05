@@ -1,11 +1,13 @@
 /**
  * Send an email to a property manager via Resend REST API (no SDK dependency).
  *
- * FROM defaults to "FixIt Alerts <alerts@usefixit.cv>" (verified domain).
- * Override by setting RESEND_FROM_EMAIL in your environment variables.
- *
+ * FROM is hardcoded to alerts@usefixit.cv (verified domain).
  * Silently skips if RESEND_API_KEY is not set.
  */
+
+// Hardcoded — no env var so nothing in Vercel can accidentally override it
+const FROM_ADDRESS = 'FixIt Alerts <alerts@usefixit.cv>';
+
 export async function sendManagerEmail({
   to,
   subject,
@@ -19,9 +21,7 @@ export async function sendManagerEmail({
 }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
 
-  // Verified domain sender — override via RESEND_FROM_EMAIL env var if needed
-  const fromAddress =
-    process.env.RESEND_FROM_EMAIL ?? 'FixIt Alerts <alerts@usefixit.cv>';
+  const fromAddress = FROM_ADDRESS;
 
   if (!apiKey) {
     console.warn('[Email] RESEND_API_KEY not set — skipping email notification.');
