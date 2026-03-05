@@ -3,11 +3,10 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth-server';
 import { BUCKET, resolvePhotoUrls } from '@/lib/storage';
 import { sendSms } from '@/lib/notify/sms';
-import { sendEmail } from '@/lib/notify/email';
+import { sendManagerEmail } from '@/lib/notify/email';
 import {
   formatSmsMessage,
-  formatEmailHtml,
-  formatEmailSubject,
+  buildNewTicketEmail,
   type NotifyTicketData,
 } from '@/lib/notify/templates';
 
@@ -254,16 +253,17 @@ async function sendNotifications({
     tenant_phone:   ticket.tenant_phone,
   };
 
+  const dashboardUrl = `${appBaseUrl}/dashboard/${notifyData.id}`;
+  const email = notifyEmail
+    ? buildNewTicketEmail(notifyData, dashboardUrl)
+    : null;
+
   const results = await Promise.allSettled([
     managerPhone
       ? sendSms(managerPhone, formatSmsMessage(notifyData, appBaseUrl))
       : Promise.resolve(),
-    notifyEmail
-      ? sendEmail(
-          notifyEmail,
-          formatEmailSubject(notifyData),
-          formatEmailHtml(notifyData, appBaseUrl)
-        )
+    email && notifyEmail
+      ? sendManagerEmail({ to: notifyEmail, ...email })
       : Promise.resolve(),
   ]);
 

@@ -216,7 +216,7 @@ export default function TokenRequestPage() {
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-[#1F3A5F]">Request Submitted</h2>
               <p className="text-gray-500">
-                Your maintenance request has been received. Your property manager will be in touch.
+                Your request was submitted. Your property manager has been notified.
               </p>
             </div>
             {successId && (
