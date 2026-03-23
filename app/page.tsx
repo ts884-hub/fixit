@@ -142,6 +142,17 @@ export default function HomePage() {
             <Link href="/pricing" className="hover:text-[#1F3A5F] transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-[#1F3A5F] transition-colors">Log In</Link>
           </div>
+          <div className="flex items-center gap-3">
+            <a href="tel:6108238139" className="text-sm text-[#1F3A5F] hover:underline">(610) 823-8139</a>
+            <span className="text-gray-300">|</span>
+            <a href="mailto:singh.tarneer@gmail.com" className="text-sm text-[#1F3A5F] hover:underline">singh.tarneer@gmail.com</a>
+            <a
+              href="mailto:singh.tarneer@gmail.com"
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#1F3A5F] text-white hover:bg-[#172d4a] transition-colors"
+            >
+              Contact Us
+            </a>
+          </div>
         </div>
       </footer>
     </div>

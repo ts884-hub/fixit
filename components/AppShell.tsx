@@ -99,8 +99,33 @@ export function AppShell({ children }: AppShellProps) {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">{children}</div>
       </main>
 
-      <footer className="bg-white border-t border-[#E2E5E7] py-4 text-center text-xs text-gray-400">
-        &copy; {new Date().getFullYear()} FixIt &mdash; Property Maintenance Management
+      <footer className="bg-white border-t border-[#E2E5E7] py-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-400">
+            &copy; {new Date().getFullYear()} FixIt &mdash; Property Maintenance Management
+          </p>
+          <div className="flex items-center gap-3">
+            <a
+              href="tel:6108238139"
+              className="text-sm text-[#1F3A5F] hover:underline"
+            >
+              (610) 823-8139
+            </a>
+            <span className="text-gray-300">|</span>
+            <a
+              href="mailto:singh.tarneer@gmail.com"
+              className="text-sm text-[#1F3A5F] hover:underline"
+            >
+              singh.tarneer@gmail.com
+            </a>
+            <a
+              href="mailto:singh.tarneer@gmail.com"
+              className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#1F3A5F] text-white hover:bg-[#172d4a] transition-colors"
+            >
+              Contact Us
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );
