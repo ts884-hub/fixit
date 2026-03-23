@@ -19,10 +19,14 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  let data: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>['data'];
+  let error: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>['error'];
+  try {
+    ({ data, error } = await supabase.auth.signInWithPassword({ email, password }));
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Database unavailable.';
+    return NextResponse.json({ error: msg }, { status: 503 });
+  }
 
   if (error || !data.session) {
     return NextResponse.json(
